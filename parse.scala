@@ -1,58 +1,58 @@
 import scala.io.Source
 import scala.collection.mutable.Queue
-import scala.collection.mutable.Map
-import java.net.URI
-import java.net.URL
-import java.nio.file.{Paths, Files}
+import scala.collection.mutable.HashSet
+import org.jsoup.Jsoup;
+import org.jsoup.Connection;
+import org.jsoup.nodes.Document;
+import scala.collection.JavaConverters._
 
-val atag = """(?i)<a\s([^>]+)>""".r
-val link = """\s*(?i)href\s*=\s*\"([^"]*)\"""".r
-val lowest = "http://idvm-infk-hofmann03.inf.ethz.ch/eth/www.ethz.ch/"
-val base : URL = new URL(lowest)
+val base = "http://idvm-infk-hofmann03.inf.ethz.ch/eth/www.ethz.ch/"
 
-
-val q : Queue[URL] = Queue.empty[URL]
-q += base
-val visited : Map[String,Boolean] = Map.empty[String,Boolean]
-visited += (base.toString -> true)
+val q : Queue[String] = Queue[String](base + "de.html")
+val visited : HashSet[String] = HashSet[String](base)
 var count = 0
+var studentCount = 0
 
 while (q.length != 0) {
+  try {
     val url = q.dequeue()
     println(url.toString)
-  try {
+    val doc = Jsoup.connect(url).get()
 
+    // Get the content from document
+    val docString = doc.text().toString()
 
-    if (url.toString.startsWith(lowest)) {
-      var node = Source.fromURL(url).mkString
-      count = count + 1
+    val studentFreq =
+      docString.split("\\W+")
+      .filter(_.equalsIgnoreCase("student"))
+      .length
 
-      val neighbours =
-        atag.findAllMatchIn(node)
-        .flatMap(m => link.findFirstMatchIn(m.group(1)))
-        .map(_.group(1))
-        .filter(!_.startsWith("tel"))
-        .filter(!_.startsWith("http"))
-        .filter(!_.contains("#"))
-        .map(new URL(url,_))
+    studentCount += studentFreq
 
-      val newNodes =
-        neighbours.filter {
-          n => !visited.getOrElse(n.toString,false)
-        }
+    // Add this string to something that handles
+    // 1. Language detection
+    // 2. Duplicate detection
 
-      newNodes.foreach { n =>
-        visited += (n.toString -> true);
-        q       += n
-      }
-    } else println("SKIPPING: " + url)
+    // Follow only .html for now
+    val elements =
+      doc.select("a[href~=.html$").iterator.asScala
+
+    val neighbours =
+      elements.map(_.attr("abs:href"))
+      .filter(_.startsWith(base))
+      .filter(!visited.contains(_))
+
+    count = count + 1
+
+    neighbours.foreach { n =>
+      visited += n;
+      q       += n;
+    }
 
   } catch {
-    case e: java.io.IOException => "EXCEPTION!! " + println(e)
+    case e: Exception => println(e)
   }
 }
+
 println("Distinct URLs found: " + count)
-// println(base)
-// println(test2)
-// hrefs.foreach(str => println(str))
-// indomain.foreach(println)
+println("Term frequency of \"student\": " + studentCount)
