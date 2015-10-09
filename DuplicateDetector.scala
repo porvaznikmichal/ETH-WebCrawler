@@ -25,10 +25,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   // For sim-hash
   val ids          = new ListBuffer[String]()
   val fingerprints = new ListBuffer[String]()
-  //val batch        = Collections.synchronizedList(new ListBuffer[String]())
-  //val batch = new ListBuffer[String] with SynchronizedBuffer[String]
-  val batch = new ConcurrentLinkedQueue[Page]();
-  //val batch = new ConcurrentLinkedQueue<Page>();
+  val batch        = new ConcurrentLinkedQueue[Page]();
 
 
   class Page(u : String, s : String, sf : Int) {
@@ -151,12 +148,14 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
       // If exact duplicate increase counter and continue with next document
       if(similarity == 1.0) {
+        println(s"Exact duplicate:\n${b.url}\n${ids(sim_id)}")
         exactDupCount += 1
       } else {
 
         // Language-detection-counting-things TODO!
 
         if(similarity >= nearDupThreshold) {
+          println(s"Near duplicate: ~${similarity}\n${b.url}\n${ids(sim_id)}")
           nearDupCount += 1
         } else {
           ids          += b.url
