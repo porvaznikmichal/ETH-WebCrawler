@@ -9,7 +9,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   val BITS = 128 // Number of bits in hash
   val K    = k   // Shingle size
 
-  val msgDigest = MessageDigest.getInstance("MD5")
+  //val msgDigest = MessageDigest.getInstance("MD5")
 
   val nearDupThreshold = t // % threshold, above and its should be markt as near dup.
 
@@ -41,7 +41,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   def md5(s : String) : String = {
     try {
       // Converts byte array to binary string representation
-      return msgDigest.digest(s.getBytes).map( b => toBinaryString(b & 0xFF, 8)).mkString
+      return MessageDigest.getInstance("MD5").digest(s.getBytes).map( b => toBinaryString(b & 0xFF, 8)).mkString
     } catch {
       case e: Exception => throw new Exception(s"md5: ${e}")
     }

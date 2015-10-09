@@ -9,8 +9,6 @@ import java.net.URL
 object webcrawler {
   type Node = String
 
-  var urlCount = new AtomicInteger(0)
-  var studentCount = new AtomicInteger(0)
   val detector = new DuplicateDetector(0.9, 3)
 
   val open = ParTrieMap[Node, Boolean]()
@@ -22,7 +20,10 @@ object webcrawler {
     val base : String = new URL(url, "./").toString()
 
     open(url.toString()) = true
+    //open(base + "en.html") = true
+
     closed(url.toString()) = true
+    //closed(base + "en.html") = true
 
     // greedy bfs path search
     while (open.nonEmpty) {
@@ -35,7 +36,7 @@ object webcrawler {
           }
         }
 
-        println(node)
+        //println(node)
 
         try {
           val doc = Jsoup.connect(node).get()
@@ -54,7 +55,7 @@ object webcrawler {
           neighbours.foreach(expand(_))
         }
         catch {
-          case e: Exception => println(e)
+          case e: org.jsoup.HttpStatusException => {}
         }
         open.remove(node)
       }
@@ -63,8 +64,10 @@ object webcrawler {
 
     }
 
-    println("Distinct URLs found: " + urlCount)
-    println("Term frequency of \"student\": " + studentCount)
+    println("Distinct URLs found: " + detector.urlCount)
+    println("Term frequency of \"student\": " + detector.studentCount)
+    println("Exact duplicates found: " + detector.exactDupCount)
+    println("Near duplicates found: " + detector.nearDupCount)
 
   }
 
