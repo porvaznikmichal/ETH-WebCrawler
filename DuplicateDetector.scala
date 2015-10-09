@@ -1,5 +1,6 @@
 import scala.collection.mutable.ListBuffer
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class DuplicateDetector(t : Double, k : Int = 3) {
 
@@ -8,10 +9,32 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
   val msgDigest = MessageDigest.getInstance("MD5")
 
-  val threshold = t // % threshold, above and its should be markt as near dup.
+  val nearDupThreshold = t // % threshold, above and its should be markt as near dup.
 
+
+  // Counters
+  var urlCount       = 0
+  var exactDupCount  = 0
+  var uniqueEngCount = 0
+  var nearDupCount   = 0
+  var studentCount   = 0
+
+
+  // For sim-hash
   val ids          = new ListBuffer[String]()
   val fingerprints = new ListBuffer[String]()
+  //val batch        = Collections.synchronizedList(new ListBuffer[String]())
+  //val batch = new ListBuffer[String] with SynchronizedBuffer[String]
+  val batch = new ConcurrentLinkedQueue[Page]();
+  //val batch = new ConcurrentLinkedQueue<Page>();
+
+
+  class Page(u : String, s : String, sf : Int) {
+    val url = u
+    val simhash = s
+    val studentFreq = sf
+  }
+
 
   def md5(s : String) : String = {
     // Converts byte array to binary string representation
@@ -49,11 +72,57 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     1.0 - sim*1.0 / BITS
   }
 
-  def detect(id : String, doc : String) : Boolean = {
-    val sh = simhash(shingles(doc))
+  def preprocess(doc : String, url : String) {
 
+    // Student freq.
+    val studentFreq =
+      doc.split("\\W+")
+      .filter(_.equalsIgnoreCase("student"))
+      .length
+
+    // Language.. TODO!
+
+    // Simhash
+    val sh = simhash(shingles(doc))
+    batch.offer(new Page(url, sh, studentFreq))
+  }
+
+  def processBatch() {
+    while(!batch.isEmpty()) {
+
+      val b = batch.poll()
+
+      // Only visits unique urls
+      urlCount += 1
+
+      // Increase student counter
+      studentCount += b.studentFreq
+
+      // Calculate similatiry score
+      val (similarity, sim_id) = calcSimilatiryScore(b.simhash)
+
+      // If exact duplicate increase counter and continue with next document
+      if(similarity == 1.0) {
+        exactDupCount += 1
+      } else {
+
+        // Language-detection-counting-things TODO!
+
+        if(similarity >= nearDupThreshold) {
+          nearDupCount += 1
+        } else {
+          ids          += b.url
+          fingerprints += b.simhash
+        }
+
+      }
+
+    }
+  }
+
+  def calcSimilatiryScore(sh : String) : (Double, Int) = {
     var sim = 0.0
-    var cid = 0
+    var cid = -1
     for(i <- 0 to fingerprints.size - 1) {
       val s = similarity(sh, fingerprints(i))
       if( s > sim ) {
@@ -61,16 +130,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
         sim = s
       }
     }
-
-    //println(s"${sh} ~ ${sim}")
-
-    if(sim >= threshold) {
-      println(s"${id} similar to:\n${ids(cid)} with:\n${sh}\n${fingerprints(cid)}\n ~ ${sim}")
-      return true
-    } else {
-      ids          += id
-      fingerprints += sh
-      return false
-    }
+    return (sim, cid)
   }
+
 }
