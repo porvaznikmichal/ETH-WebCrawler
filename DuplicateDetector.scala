@@ -39,8 +39,13 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
 
   def md5(s : String) : String = {
-    // Converts byte array to binary string representation
-    msgDigest.digest(s.getBytes).map( b => toBinaryString(b & 0xFF, 8)).mkString
+    try {
+      // Converts byte array to binary string representation
+      return msgDigest.digest(s.getBytes).map( b => toBinaryString(b & 0xFF, 8)).mkString
+    } catch {
+      case e: Exception => throw new Exception(s"md5: ${e}")
+    }
+
   }
 
   def shingles(doc : String) : Set[String] = {
@@ -51,12 +56,16 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   }
 
   def simhash(shingles : Set[String]) : String = {
-    val hashes = shingles.map(s => md5(s))
-    var G = new Array[Int](BITS)
-    for(i <- 0 to BITS - 1; h <- hashes) {
-      G(i) += 2*h.charAt(i).asDigit - 1
+    try {
+      val hashes = shingles.map(s => md5(s))
+      var G = new Array[Int](BITS)
+      for(i <- 0 to BITS - 1; h <- hashes) {
+        G(i) += 2*h.charAt(i).asDigit - 1
+      }
+      return G.map(g => (1.0/2 * (Math.signum(g) + 1 )).toInt).mkString
+    } catch {
+      case e: Exception => throw new Exception(s"simhash: ${e}")
     }
-    G.map(g => (1.0/2 * (Math.signum(g) + 1 )).toInt).mkString
   }
 
   // Converts an Int to a binary string
@@ -65,13 +74,17 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   }
 
   def similarity(a : String, b: String) : Double = {
-    var sim = 0
-    for(i <- 0 to BITS - 1) {
-      if(a.charAt(i) != b.charAt(i)) {
-        sim += 1
+    try {
+      var sim = 0
+      for(i <- 0 to BITS - 1) {
+        if(a.charAt(i) != b.charAt(i)) {
+          sim += 1
+        }
       }
+      return 1.0 - sim*1.0 / BITS
+    } catch {
+      case e: Exception => throw new Exception(s"similarity: ${e}")
     }
-    1.0 - sim*1.0 / BITS
   }
 
   // Read language distribution map from file
@@ -156,16 +169,20 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   }
 
   def calcSimilatiryScore(sh : String) : (Double, Int) = {
-    var sim = 0.0
-    var cid = -1
-    for(i <- 0 to fingerprints.size - 1) {
-      val s = similarity(sh, fingerprints(i))
-      if( s > sim ) {
-        cid = i
-        sim = s
+    try {
+      var sim = 0.0
+      var cid = -1
+      for(i <- 0 to fingerprints.size - 1) {
+        val s = similarity(sh, fingerprints(i))
+        if( s > sim ) {
+          cid = i
+          sim = s
+        }
       }
+      return (sim, cid)
+    } catch {
+      case e: Exception => throw new Exception(s"calcSim: ${e}")
     }
-    return (sim, cid)
   }
 
 }
