@@ -21,6 +21,9 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   var nearDupCount   = 0
   var studentCount   = 0
 
+  // read in the language maps
+  val languages = List((readNgrams("english.txt"), "english"),
+                       (readNgrams("german.txt"), "german"))
 
   // For sim-hash
   val ids          = new ListBuffer[String]()
@@ -28,10 +31,11 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   val batch        = new ConcurrentLinkedQueue[Page]();
 
 
-  class Page(u : String, s : String, sf : Int) {
+  class Page(u : String, s : String, sf : Int, l: String) {
     val url = u
     val simhash = s
     val studentFreq = sf
+    val language = l
   }
 
 
@@ -125,11 +129,12 @@ class DuplicateDetector(t : Double, k : Int = 3) {
       .filter(_.equalsIgnoreCase("student"))
       .length
 
-    // Language.. TODO!
+    // Language detection
+    val detectedLanguage = classify(doc, languages)
 
     // Simhash
     val sh = simhash(shingles(doc))
-    batch.offer(new Page(url, sh, studentFreq))
+    batch.offer(new Page(url, sh, studentFreq, detectedLanguage))
   }
 
   def processBatch() {
@@ -152,7 +157,8 @@ class DuplicateDetector(t : Double, k : Int = 3) {
         exactDupCount += 1
       } else {
 
-        // Language-detection-counting-things TODO!
+        // Increment number of english language pages
+        if (b.language == "english") uniqueEngCount += 1
 
         if(similarity >= nearDupThreshold) {
           println(s"Near duplicate: ~${similarity}\n${b.url}\n${ids(sim_id)}")
