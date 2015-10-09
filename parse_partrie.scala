@@ -4,65 +4,77 @@ import org.jsoup.nodes.Document;
 import scala.collection.JavaConverters._
 import scala.collection.parallel.mutable.ParTrieMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.net.URL
 
-type Node = String
-type Parent = String
+object webcrawler {
+  type Node = String
 
-val base = "http://idvm-infk-hofmann03.inf.ethz.ch/eth/www.ethz.ch/"
+  var urlCount = new AtomicInteger(0)
+  var studentCount = new AtomicInteger(0)
+  val detector = new DuplicateDetector(0.9, 3)
 
-var urlCount = new AtomicInteger(0)
-var studentCount = new AtomicInteger(0)
+  val open = ParTrieMap[Node, Boolean]()
+  val closed = ParTrieMap[Node, Boolean]()
 
 
-val open = ParTrieMap[Node, Parent]()
-val closed = ParTrieMap[Node, Parent]()
+  def main(args : Array[String]) {
+    val url : URL = new URL(args(0))
+    val base : String = new URL(url, "./").toString()
 
-open(base + "de.html") = null
+    open(url.toString()) = true
+    closed(url.toString()) = true
 
-// greedy bfs path search (magic)
-while (open.nonEmpty) {
-  for ((node, parent) <- open) {
+    // greedy bfs path search
+    while (open.nonEmpty) {
+      for ((node, _) <- open) {
 
-    def expand(next: Node) {
-      if (!closed.contains(next)) {
-        open(next) = node
+        def expand(next: Node) {
+          if (!closed.contains(next)) {
+            open(next) = true
+            closed(next) = true
+          }
+        }
+
+        println(node)
+
+        try {
+          val doc = Jsoup.connect(node).get()
+
+          val docString = doc.text().toString()
+
+          detector.preprocess(docString, node)
+
+          val elements =
+            doc.select("a[href~=.html$").iterator.asScala
+
+          val neighbours =
+            elements.map(_.attr("abs:href"))
+            .filter(_.startsWith(base))
+
+          neighbours.foreach(expand(_))
+        }
+        catch {
+          case e: Exception => println(e)
+        }
+        open.remove(node)
       }
+
+      detector.processBatch()
+
     }
 
-    println(node)
-    try {
-      val doc = Jsoup.connect(node).get()
-      val docString = doc.text().toString()
-      val elements =
-        doc.select("a[href~=.html$").iterator.asScala
-      val studentFreq =
-        docString.split("\\W+")
-        .filter(_.equalsIgnoreCase("student"))
-        .length
+    println("Distinct URLs found: " + urlCount)
+    println("Term frequency of \"student\": " + studentCount)
 
-      studentCount.getAndAdd(studentFreq)
-      urlCount.getAndIncrement()
-
-      val neighbours =
-        elements.map(_.attr("abs:href"))
-        .filter(_.startsWith(base))
-
-      neighbours.foreach(expand(_))
-    }
-    catch {
-      case e: Exception => println(e)
-    }
-    closed(node) = parent
-    open.remove(node)
   }
+
+
+
+
+  //
+  // Distinct URLs found: 5292
+  // Term frequency of "student": 14248
+  //
+  // Distinct URLs found: 10388
+  // Term frequency of "student": 14248
 }
-
-
-println("Distinct URLs found: " + urlCount)
-println("Term frequency of \"student\": " + studentCount)
-//
-// Distinct URLs found: 5292
-// Term frequency of "student": 14248
-//
-// Distinct URLs found: 10388
-// Term frequency of "student": 14248

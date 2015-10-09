@@ -9,7 +9,7 @@ import scala.collection.JavaConverters._
 val base = "http://idvm-infk-hofmann03.inf.ethz.ch/eth/www.ethz.ch/"
 
 val q : Queue[String] = Queue[String](base + "de.html")
-val visited : HashSet[String] = HashSet[String](base)
+val visited : HashSet[String] = HashSet[String](base + "de.html")
 var count = 0
 var studentCount = 0
 
