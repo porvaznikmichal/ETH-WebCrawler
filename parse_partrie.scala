@@ -20,10 +20,7 @@ object webcrawler {
     val base : String = new URL(url, "./").toString()
 
     open(url.toString()) = true
-    //open(base + "en.html") = true
-
     closed(url.toString()) = true
-    //closed(base + "en.html") = true
 
     // greedy bfs path search
     while (open.nonEmpty) {
@@ -46,10 +43,12 @@ object webcrawler {
           detector.preprocess(docString, node)
 
           val elements =
-            doc.select("a[href~=.html$").iterator.asScala
+            doc.select("a[href~=.html$")
+            .iterator.asScala
 
           val neighbours =
             elements.map(_.attr("abs:href"))
+            .filter(!_.contains("?"))
             .filter(_.startsWith(base))
 
           neighbours.foreach(expand(_))
