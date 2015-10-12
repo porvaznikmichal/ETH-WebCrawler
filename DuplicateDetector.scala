@@ -15,7 +15,6 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
   val nearDupThreshold = t // % threshold, above and its should be markt as near dup.
 
-
   // Counters
   var urlCount       = 0
   var exactDupCount  = 0
@@ -32,22 +31,16 @@ class DuplicateDetector(t : Double, k : Int = 3) {
   val batch        = new ConcurrentLinkedQueue[Page]();
 
 
-  class Page(u : String, s : String, sf : Int, l: String) {
+  class Page(u : String, s : Array[Byte], sf : Int, l: String) {
     val url = u
     val simhash = s
     val studentFreq = sf
     val language = l
   }
 
-
-  def md5(s : String) : String = {
-    try {
-      // Converts byte array to binary string representation
-      return MessageDigest.getInstance("MD5").digest(s.getBytes).map( b => toBinaryString(b & 0xFF, 8)).mkString
-    } catch {
-      case e: Exception => throw new Exception(s"md5: ${e}")
-    }
-
+  // Generate md5-hash of string
+  def md5(s : String) : Array[Byte] = {
+      MessageDigest.getInstance("MD5").digest(s.getBytes)
   }
 
   def shingles(doc : String) : Set[String] = {
@@ -57,17 +50,25 @@ class DuplicateDetector(t : Double, k : Int = 3) {
        .toSet
   }
 
-  def simhash(shingles : Set[String]) : String = {
+  def simhash(shingles : Set[String]) : Array[Byte] = {
     try {
       val hashes = shingles.map(s => md5(s))
       var G = new Array[Int](BITS)
       for(i <- 0 to BITS - 1; h <- hashes) {
-        G(i) += 2*h.charAt(i).asDigit - 1
+        G(i) += 2*getBit(h,i) - 1
       }
-      return G.map(g => (1.0/2 * (Math.signum(g) + 1 )).toInt).mkString
+
+      // List of 0's and 1's, converted to Array[Byte]
+      return G.map(g => (1.0/2 * (Math.signum(g) + 1 )).toByte).
+          grouped(8).toArray.map(l => Integer.parseInt(l.mkString,2).toByte)
     } catch {
       case e: Exception => throw new Exception(s"simhash: ${e}")
     }
+  }
+
+  // Returns bit (0 or 1) at position p (starting at 0) from array byte ab
+  def getBit(ab: Array[Byte], p: Int) : Int = {
+    (ab(p / 8) >> p % 8) & 1
   }
 
   // Converts an Int to a binary string
@@ -75,15 +76,14 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     String.format(s"%${l}s", Integer.toBinaryString(value)).replace(' ', '0')
   }
 
-  def similarity(a : String, b: String) : Double = {
+  def similarity(a : Array[Byte], b: Array[Byte]) : Double = {
     try {
-      var sim = 0
-      for(i <- 0 to BITS - 1) {
-        if(a.charAt(i) != b.charAt(i)) {
-          sim += 1
-        }
+      val diffbytes = a.zip(b).map{case(x,y) => (x ^ y).toByte}
+      var diff = 0
+      for(j <- 0 to BITS - 1) {
+        diff += getBit(diffbytes, j)
       }
-      return 1.0 - sim*1.0 / BITS
+      return 1.0 - diff*1.0 / BITS
     } catch {
       case e: Exception => throw new Exception(s"similarity: ${e}")
     }
@@ -179,7 +179,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     }
   }
 
-  def calcSimilatiryScore(sh : String) : (Double, Int) = {
+  def calcSimilatiryScore(sh : Array[Byte]) : (Double, Int) = {
     try {
       var sim = 0.0
       var cid = -1
