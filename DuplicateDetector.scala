@@ -3,6 +3,8 @@ import java.security.MessageDigest
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.io.Source
 import scala.math.log
+import org.jsoup.Jsoup;
+
 
 class DuplicateDetector(t : Double, k : Int = 3) {
 
@@ -137,6 +139,13 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     batch.offer(new Page(url, sh, studentFreq, detectedLanguage))
   }
 
+  // Exact duplicate verification
+  def exactVerification(page1: Page, page2: Page) : Boolean = {
+    val doc1 = Jsoup.connect(page1.url).get().text().toString()
+    val doc2 = Jsoup.connect(page2.url).get().text().toString()
+    doc1 == doc2
+  }
+
   def processBatch() {
     while(!batch.isEmpty()) {
 
@@ -149,12 +158,14 @@ class DuplicateDetector(t : Double, k : Int = 3) {
       studentCount += b.studentFreq
 
       // Calculate similatiry score
-      val (similarity, sim_id) = calcSimilatiryScore(b.simhash)
+      val (similarity, sim_page) = calcSimilatiryScore(b.simhash)
 
-      // If exact duplicate increase counter and continue with next document
+      // If similarity is 1.0, verify if if pages are exact duplicates
       if(similarity == 1.0) {
-        println(s"Exact duplicate:\n${b.url}\n${ids(sim_id)}")
-        exactDupCount += 1
+        if (exactVerification(b, sim_page)) {
+          println(s"Exact duplicate:\n${b.url}\n${sim_page.url}")
+          exactDupCount += 1
+        }
       } else {
 
         // Increment number of english language pages
