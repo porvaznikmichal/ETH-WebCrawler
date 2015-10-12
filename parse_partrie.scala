@@ -38,12 +38,7 @@ object webcrawler {
         try {
           val doc = Jsoup.connect(node).get()
 
-          //val docString = doc.text().toString()
-
-          val content = doc.select("p").text().toString()
-        //  println()
-
-          detector.preprocess(content, node)
+          detector.preprocess(doc, node)
 
           val elements =
             doc.select("a[href~=.html$]")

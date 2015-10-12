@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import scala.io.Source
 import scala.math.log
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 
 class DuplicateDetector(t : Double, k : Int = 3) {
@@ -122,26 +123,37 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     return detect
   }
 
-  def preprocess(doc : String, url : String) {
-
+  def preprocess(doc : Document, url : String) {
+    // get full text
+    val fullText = doc.text().toString()
+    if (fullText == "") return
     // Student freq.
     val studentFreq =
-      doc.split("\\W+")
+      fullText.split("\\W+")
       .filter(_.equalsIgnoreCase("student"))
       .length
 
+    // get paragraph text and chcek if empty
+    val parText = doc.select("p, h1, h2, h3").text().toString()
+
+    var text = ""
+    if (parText.size == 0) {
+      text = fullText
+    }
+    else text = parText
+
     // Language detection
-    val detectedLanguage = classify(doc, languages)
+    val detectedLanguage = classify(fullText, languages)
 
     // Simhash
-    val sh = simhash(shingles(doc))
+    val sh = simhash(shingles(text))
     batch.offer(new Page(url, sh, studentFreq, detectedLanguage))
   }
 
   // Exact duplicate verification
   def exactVerification(page1: Page, page2: Page) : Boolean = {
-    val doc1 = Jsoup.connect(page1.url).get().body().toString()
-    val doc2 = Jsoup.connect(page2.url).get().body().toString()
+    val doc1 = Jsoup.connect(page1.url).get().body().text().toString()
+    val doc2 = Jsoup.connect(page2.url).get().body().text().toString()
     doc1 == doc2
   }
 
