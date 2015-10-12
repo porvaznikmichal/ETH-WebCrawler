@@ -140,9 +140,15 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
   // Exact duplicate verification
   def exactVerification(page1: Page, page2: Page) : Boolean = {
-    val doc1 = Jsoup.connect(page1.url).get().body().toString()
-    val doc2 = Jsoup.connect(page2.url).get().body().toString()
-    doc1 == doc2
+    try {
+      val doc1 = Jsoup.connect(page1.url).get().body().toString()
+      val doc2 = Jsoup.connect(page2.url).get().body().toString()
+      doc1 == doc2
+    }
+    catch {
+      case e: org.jsoup.HttpStatusException => {println(e); return false}
+      case e: java.net.SocketTimeoutException => {println(e); return false}
+    }
   }
 
   def processBatch() {

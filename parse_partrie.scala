@@ -58,6 +58,7 @@ object webcrawler {
         }
         catch {
           case e: org.jsoup.HttpStatusException => {}
+          case e: java.net.SocketTimeoutException => println(e)
         }
         open.remove(node)
       }
