@@ -38,12 +38,15 @@ object webcrawler {
         try {
           val doc = Jsoup.connect(node).get()
 
-          val docString = doc.text().toString()
+          //val docString = doc.text().toString()
 
-          detector.preprocess(docString, node)
+          val content = doc.select("p")
+        //  println()
+
+          detector.preprocess(content, node)
 
           val elements =
-            doc.select("a[href~=.html$")
+            doc.select("a[href~=.html$]")
             .iterator.asScala
 
           val neighbours =
