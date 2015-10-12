@@ -28,8 +28,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
                        (readNgrams("german.txt"), "german"))
 
   // For sim-hash
-  val ids          = new ListBuffer[String]()
-  val fingerprints = new ListBuffer[String]()
+  val history = new ListBuffer[Page]()
   val batch        = new ConcurrentLinkedQueue[Page]();
 
 
@@ -141,8 +140,8 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
   // Exact duplicate verification
   def exactVerification(page1: Page, page2: Page) : Boolean = {
-    val doc1 = Jsoup.connect(page1.url).get().text().toString()
-    val doc2 = Jsoup.connect(page2.url).get().text().toString()
+    val doc1 = Jsoup.connect(page1.url).get().body().toString()
+    val doc2 = Jsoup.connect(page2.url).get().body().toString()
     doc1 == doc2
   }
 
@@ -161,12 +160,12 @@ class DuplicateDetector(t : Double, k : Int = 3) {
       val (similarity, sim_page) = calcSimilatiryScore(b.simhash)
 
       // If similarity is 1.0, verify if if pages are exact duplicates
-      if(similarity == 1.0) {
-        if (exactVerification(b, sim_page)) {
-          println(s"Exact duplicate:\n${b.url}\n${sim_page.url}")
-          exactDupCount += 1
-        }
+      if(similarity == 1.0 && exactVerification(b, history(sim_page))) {
+        println(s"Exact duplicate:\n${b.url}\n${sim_page.url}")
+        exactDupCount += 1
       } else {
+        // Add all pages that are not exact duplicates
+        history += b
 
         // Increment number of english language pages
         if (b.language == "english") uniqueEngCount += 1
@@ -174,11 +173,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
         if(similarity >= nearDupThreshold) {
           println(s"Near duplicate: ~${similarity}\n${b.url}\n${ids(sim_id)}")
           nearDupCount += 1
-        } else {
-          ids          += b.url
-          fingerprints += b.simhash
         }
-
       }
 
     }
@@ -188,8 +183,8 @@ class DuplicateDetector(t : Double, k : Int = 3) {
     try {
       var sim = 0.0
       var cid = -1
-      for(i <- 0 to fingerprints.size - 1) {
-        val s = similarity(sh, fingerprints(i))
+      for(i <- 0 to history.size - 1) {
+        val s = similarity(sh, history(i).simhash)
         if( s > sim ) {
           cid = i
           sim = s
