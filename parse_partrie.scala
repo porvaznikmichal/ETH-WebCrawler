@@ -40,7 +40,7 @@ object webcrawler {
 
           //val docString = doc.text().toString()
 
-          val content = doc.select("p")
+          val content = doc.select("p").text().toString()
         //  println()
 
           detector.preprocess(content, node)

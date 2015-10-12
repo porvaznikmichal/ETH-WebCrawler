@@ -161,7 +161,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
       // If similarity is 1.0, verify if if pages are exact duplicates
       if(similarity == 1.0 && exactVerification(b, history(sim_page))) {
-        println(s"Exact duplicate:\n${b.url}\n${sim_page.url}")
+        println(s"Exact duplicate:\n${b.url}\n${history(sim_page).url}")
         exactDupCount += 1
       } else {
         // Add all pages that are not exact duplicates
@@ -171,7 +171,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
         if (b.language == "english") uniqueEngCount += 1
 
         if(similarity >= nearDupThreshold) {
-          println(s"Near duplicate: ~${similarity}\n${b.url}\n${ids(sim_id)}")
+          println(s"Near duplicate: ~${similarity}\n${b.url}\n${history(sim_page).url}")
           nearDupCount += 1
         }
       }
