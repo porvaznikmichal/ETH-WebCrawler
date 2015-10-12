@@ -67,7 +67,9 @@ object webcrawler {
     println("Distinct URLs found: " + detector.urlCount)
     println("Term frequency of \"student\": " + detector.studentCount)
     println("Exact duplicates found: " + detector.exactDupCount)
+    println("Number of unique english pages: " + detector.uniqueEngCount)
     println("Near duplicates found: " + detector.nearDupCount)
+
 
   }
 
