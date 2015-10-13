@@ -2,6 +2,10 @@
 
 To make proper jar files, we "need" SBT (brew install sbt).
 SBT enforces a strict directory structure:
+
+```
+#!noname
+
 src/
   main/
     resources/
@@ -17,4 +21,4 @@ src/
        <test Scala sources>
     java/
        <test Java sources>
-
+```
