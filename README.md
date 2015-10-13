@@ -18,7 +18,7 @@ src/
     scala/
        <main Scala sources>
 lib/
-  <external libraries (jsoup)>
+  <external libraries which cannot be automatically downloaded (tinyIR in the future?)>
 ```
 
 In order to create the .jar file we run `sbt assembly` from the project root path. The .jar file will end up in *target/scala-{version}/filname.jar*. 
