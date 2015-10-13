@@ -14,7 +14,7 @@ SBT enforces a strict directory structure:
 src/
   main/
     resources/
-       <files to include in main jar here (e.g english.txt>
+       <files to include in main jar here (e.g english.txt)>
     scala/
        <main Scala sources>
 lib/
