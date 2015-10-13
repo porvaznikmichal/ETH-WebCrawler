@@ -6,7 +6,7 @@ import scala.collection.parallel.mutable.ParTrieMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.net.URL
 
-object webcrawler {
+object Webcrawler {
   type Node = String
 
   val detector = new DuplicateDetector(0.9, 3)

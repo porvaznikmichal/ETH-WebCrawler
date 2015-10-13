@@ -92,7 +92,7 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
   // Read language distribution map from file
   def readNgrams(fileName : String) : Map[String, Double] = {
-    val grams = Source.fromFile(fileName)
+    val grams = Source.fromInputStream(getClass().getClassLoader().getResourceAsStream(fileName))
           .getLines
           .map(_.split("\t"))
           .map(x => x(0) -> x(1).toInt).toList
