@@ -1,6 +1,11 @@
 # README #
 
-To make proper jar files, we "need" SBT (brew install sbt).
+To make proper jar files, we "need" SBT 
+```
+#!bash
+
+brew install sbt
+```
 SBT enforces a strict directory structure:
 
 ```
@@ -12,13 +17,10 @@ src/
        <files to include in main jar here>
     scala/
        <main Scala sources>
-    java/
-       <main Java sources>
-  test/
-    resources
-       <files to include in test jar here>
-    scala/
-       <test Scala sources>
-    java/
-       <test Java sources>
+lib/
+  <external libraries (jsoup)>
 ```
+
+In order to create the .jar file we run `sbt assembly` from the project root path. The .jar file will end up in *target/scala-{version}/filname.jar*. 
+
+After this we can run it with `scala target/target/scala-{version}/filname.jar webpage-to-crawl`.
