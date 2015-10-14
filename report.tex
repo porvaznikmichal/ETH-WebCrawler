@@ -38,14 +38,14 @@
 \begin{itemize}
   \item \textbf{Visited URLs:} As instructed, we only follow links ending with ".html" not containing "?\#" symbols, i.e the page \textit{/loginf545.html?resource=\%2Fcontent\%2Fmain\%2Fde.html} would not be considered. Additionally, we exclude all valid pages with no content, i.e. a blank page.
   
- \item \textbf
+ \item \textbf{Distinct URL count:} All links satisfying the above criteria are counted as a unique URL, regardless of duplicities.
   
-  \item \textbf{URL Parsing: } We only extract paragraphs and headers as we found that these contain majority of relevant content, while not assuming any particular HTML structure, \textit{e.g
+  \item \textbf{URL Parsing:} We only extract paragraphs and headers as we found that these contain majority of relevant content, while not assuming any particular HTML structure, \textit{e.g
   .} $\langle$ section id= "content" $\rangle$.
   
-  \item \textbf{Exact duplicate detection: } Whenever two pages have identical \textit{SimHash} fingerprint, we verify if their textual content is identical. Only in such case do we consider these as identical, because two slightly different pages might be assigned the same fingerprint.
+  \item \textbf{Exact duplicate detection:} Whenever a new page has a \textit{SimHash} fingerprint identical to an an already visited page, we verify if their textual content is identical. Only in such case do we consider these as identical, because two slightly different pages might be assigned the same fingerprint.
   
-  \item \
+  \item \textbf{Near duplicate detection:} All pages with similarity at least $\frac{126}{128}$ that are not exact duplicates are considered near duplicates.
   
   
 \end{itemize}
