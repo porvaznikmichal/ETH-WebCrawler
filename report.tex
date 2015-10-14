@@ -28,9 +28,26 @@
 \begin{itemize}
   \item Distincs URLs found: 
   \item Exact duplicates found:
-  \item Unique English pages found: 
   \item Near duplicates found:
+  \item Unique English pages found: 
   \item Term frequency of "student":  
+\end{itemize}
+
+\section*{Assumptions and implementation details }
+
+\begin{itemize}
+  \item \textbf{Visited URLs:} As instructed, we only follow links ending with ".html" not containing "?\#" symbols, i.e the page \textit{/loginf545.html?resource=\%2Fcontent\%2Fmain\%2Fde.html} would not be considered. Additionally, we exclude all valid pages with no content, i.e. a blank page.
+  
+ \item \textbf
+  
+  \item \textbf{URL Parsing: } We only extract paragraphs and headers as we found that these contain majority of relevant content, while not assuming any particular HTML structure, \textit{e.g
+  .} $\langle$ section id= "content" $\rangle$.
+  
+  \item \textbf{Exact duplicate detection: } Whenever two pages have identical \textit{SimHash} fingerprint, we verify if their textual content is identical. Only in such case do we consider these as identical, because two slightly different pages might be assigned the same fingerprint.
+  
+  \item \
+  
+  
 \end{itemize}
 
 \end{document} 

@@ -9,7 +9,7 @@ import java.net.URL
 object Webcrawler {
   type Node = String
 
-  val detector = new DuplicateDetector(0.9, 3)
+  val detector = new DuplicateDetector(1.0 - 2.0/128, 3)
 
   val open = ParTrieMap[Node, Boolean]()
   val closed = ParTrieMap[Node, Boolean]()

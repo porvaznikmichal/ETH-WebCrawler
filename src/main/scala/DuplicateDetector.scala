@@ -171,25 +171,30 @@ class DuplicateDetector(t : Double, k : Int = 3) {
       // Only visits unique urls
       urlCount += 1
 
-      // Increase student counter
-      studentCount += b.studentFreq
 
       // Calculate similatiry score
       val (similarity, sim_page) = calcSimilatiryScore(b.simhash)
 
+      // if not a near duplicate, increment student count and detect language
+      if (similarity < nearDupThreshold) {
+        // Increase student counter
+        studentCount += b.studentFreq
+        
+        // Increment number of english language pages
+        if (b.language == "english") uniqueEngCount += 1
+      }
+
       // If similarity is 1.0, verify if if pages are exact duplicates
       if(similarity == 1.0 && exactVerification(b, history(sim_page))) {
-        println(s"Exact duplicate:\n${b.url}\n${history(sim_page).url}")
+        // println(s"Exact duplicate:\n${b.url}\n${history(sim_page).url}")
         exactDupCount += 1
       } else {
         // Add all pages that are not exact duplicates
         history += b
 
-        // Increment number of english language pages
-        if (b.language == "english") uniqueEngCount += 1
 
         if(similarity >= nearDupThreshold) {
-          println(s"Near duplicate: ~${similarity}\n${b.url}\n${history(sim_page).url}")
+          // println(s"Near duplicate: ~${similarity}\n${b.url}\n${history(sim_page).url}")
           nearDupCount += 1
         }
       }
