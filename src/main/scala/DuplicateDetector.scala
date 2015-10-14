@@ -177,11 +177,14 @@ class DuplicateDetector(t : Double, k : Int = 3) {
 
       // if not a near duplicate, increment student count and detect language
       if (similarity < nearDupThreshold) {
-        // Increase student counter
-        studentCount += b.studentFreq
-        
-        // Increment number of english language pages
-        if (b.language == "english") uniqueEngCount += 1
+
+
+        if (b.language == "english") {
+          // Increment number of english language pages
+          uniqueEngCount += 1
+          // Increase student counter
+          studentCount += b.studentFreq
+        }
       }
 
       // If similarity is 1.0, verify if if pages are exact duplicates
