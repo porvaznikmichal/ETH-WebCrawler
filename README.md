@@ -1,5 +1,4 @@
-Web Crawler
-# README #
+# Web Crawler
 ETH Zurich [Information Retrieval 2015](http://www.da.inf.ethz.ch/teaching/2015/Information-Retrieval/) web crawler project.
 
 Given a URL address, the Web Crawler parses the web page and visits all links
